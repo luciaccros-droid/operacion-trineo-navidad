@@ -21,8 +21,8 @@ function reiniciar() {
 
 const params = new URLSearchParams(location.search);
 if (params.has('prueba')) sessionStorage.setItem('modo-prueba', '1');
-if (params.has('reiniciar')) { reiniciar(); history.replaceState(null, '', location.pathname + (prueba() ? '?prueba' : '')); }
 const prueba = () => sessionStorage.getItem('modo-prueba') === '1';
+if (params.has('reiniciar')) { reiniciar(); history.replaceState(null, '', location.pathname + (prueba() ? '?prueba' : '')); }
 
 /* ---------- Fechas ---------- */
 let D = null;
@@ -76,7 +76,7 @@ function marco(contenido, pestana) {
   const nav = el('nav', { class: 'nav', 'aria-label': 'Secciones' });
   [['expedientes', 'Expedientes', panel], ['objetos', 'Objetos', objetos], ['claves', 'Claves', claves], ['registro', 'Registro de campo', registro]]
     .forEach(([id, txt, fn]) => nav.append(el('button', { type: 'button', class: 'nav-btn' + (pestana === id ? ' activo' : ''), 'aria-current': pestana === id ? 'page' : 'false', onclick: () => fn() }, txt)));
-  app.append(
+  app.append(el('div', { class: 'guirnalda', 'aria-hidden': 'true' }),
     el('header', { class: 'cabecera' },
       el('div', { class: 'logo' }, el('span', { class: 'logo-sub' }, 'ARCHIVO CENTRAL'), el('h1', {}, 'OPERACIÓN TRINEO')),
       el('div', { class: 'progreso' }, el('span', {}, 'Expedientes'), el('strong', {}, `${numHechos()}/23`))),
