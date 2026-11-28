@@ -13,8 +13,15 @@ function cargar() {
 let P = cargar();
 const guardar = () => { try { localStorage.setItem(CLAVE_LS, JSON.stringify(P)); } catch { /* sin almacenamiento */ } };
 
+function reiniciar() {
+  try { localStorage.removeItem(CLAVE_LS); } catch { /* sin almacenamiento */ }
+  P = vacio();
+  for (const k in cache) delete cache[k];
+}
+
 const params = new URLSearchParams(location.search);
 if (params.has('prueba')) sessionStorage.setItem('modo-prueba', '1');
+if (params.has('reiniciar')) { reiniciar(); history.replaceState(null, '', location.pathname + (prueba() ? '?prueba' : '')); }
 const prueba = () => sessionStorage.getItem('modo-prueba') === '1';
 
 /* ---------- Fechas ---------- */
@@ -54,7 +61,11 @@ function barraPrueba() {
   if (!prueba()) return null;
   return el('div', { class: 'barra-prueba' },
     el('strong', {}, 'MODO PRUEBA · fechas ignoradas'),
-    el('button', { type: 'button', class: 'btn btn-mini', onclick: () => { if (confirm('¿Borrar todo el progreso de este navegador?')) { localStorage.removeItem(CLAVE_LS); P = cargar(); for (const k in cache) delete cache[k]; panel(); } } }, 'Reiniciar progreso'),
+    el('button', { type: 'button', class: 'btn btn-mini', onclick: (e) => {
+      const b = e.currentTarget;
+      if (b.dataset.seguro !== '1') { b.dataset.seguro = '1'; b.textContent = '¿Seguro? Pulsa otra vez'; setTimeout(() => { b.dataset.seguro = ''; b.textContent = 'Reiniciar progreso'; }, 4000); return; }
+      reiniciar(); panel();
+    } }, 'Reiniciar progreso'),
     el('button', { type: 'button', class: 'btn btn-mini', onclick: () => { sessionStorage.removeItem('modo-prueba'); location.href = location.pathname; } }, 'Salir'));
 }
 
@@ -81,7 +92,7 @@ function bienvenida() {
     el('h1', {}, 'OPERACIÓN TRINEO'),
     el('p', {}, 'Se ha detectado actividad inusual en el archivo de fin de año. La información está fragmentada y protegida por varios niveles de seguridad.'),
     el('p', {}, 'Tu misión: recuperar los expedientes, conectar las pruebas y reconstruir el archivo final. Hay una cita importante antes de que termine el año. El objetivo exacto permanece clasificado.'),
-    el('p', {}, 'Cada día, abre el compartimento que toca y después su expediente.'),
+    el('p', {}, 'Cada día se desbloquea un expediente nuevo. Resuélvelo para poder abrir el siguiente.'),
     el('button', { type: 'button', class: 'btn btn-grande', onclick: () => { P.visto = true; guardar(); panel(); } }, 'Acceder al archivo')));
 }
 
@@ -136,6 +147,9 @@ async function expediente(n) {
     else if (t === 'audio') widget = W.audio(c.widget);
     else if (t === 'simon') widget = W.simon(c.widget, hecho);
     else if (t === 'ranuras') ranuras = W.ranuras(c.widget);
+    else if (t === 'rejilla') widget = W.rejillaWidget(c.widget);
+    else if (t === 'voltear') widget = W.voltear();
+    else if (t === 'espejo') widget = W.espejo(c.widget);
     if (widget) zona.append(widget);
   }
   if (c.enunciado) zona.append(el('div', { class: 'enunciado' }, c.enunciado));
@@ -285,4 +299,3 @@ async function registro() {
   }
   if (P.visto) panel(); else bienvenida();
 })();
-
