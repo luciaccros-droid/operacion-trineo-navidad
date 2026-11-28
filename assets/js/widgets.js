@@ -258,3 +258,53 @@ export function ranuras(cfg) {
   caja.valor = () => campos.map((c) => c.value).join(' ');
   return caja;
 }
+
+/* ---------- Rejilla en el expediente (con plantilla opcional) ---------- */
+export function rejillaWidget(cfg) {
+  const caja = el('div', { class: 'widget rejilla-widget' });
+  const tabla = rejilla(cfg);
+  caja.append(tabla);
+  if (cfg.ventanas) {
+    const mapa = {};
+    for (const [sim, col, num] of cfg.ventanas) mapa[sim + col] = num;
+    const celdas = [...tabla.querySelectorAll('tr')].slice(1).flatMap((tr) => {
+      const sim = tr.querySelector('th').textContent;
+      return [...tr.querySelectorAll('td')].map((td, i) => [td, mapa[sim + (i + 1)]]);
+    });
+    const btn = el('button', { type: 'button', class: 'btn', onclick: () => {
+      const puesta = tabla.classList.toggle('con-plantilla');
+      for (const [td, num] of celdas) {
+        td.classList.toggle('tapada', puesta && !num);
+        td.querySelector('small')?.remove();
+        if (puesta && num) td.append(el('small', { class: 'ventana-num' }, num));
+      }
+      btn.textContent = puesta ? 'Quitar plantilla' : 'Colocar plantilla';
+    } }, 'Colocar plantilla');
+    caja.append(el('div', { class: 'fila-botones' }, btn));
+  }
+  return caja;
+}
+
+/* ---------- Figura que se puede voltear ---------- */
+const FIGURA = `<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><rect x="35" y="170" width="90" height="16" rx="4" fill="#6b4a2a"/><circle cx="80" cy="132" r="40" fill="#f4f1ea"/><circle cx="80" cy="72" r="28" fill="#f4f1ea"/><rect x="58" y="34" width="44" height="10" rx="2" fill="#1c1c1c"/><rect x="66" y="10" width="28" height="28" rx="3" fill="#1c1c1c"/><circle cx="70" cy="68" r="3.5" fill="#1c1c1c"/><circle cx="90" cy="68" r="3.5" fill="#1c1c1c"/><path d="M80 74 l16 5 l-16 3 z" fill="#e8833a"/><path d="M56 96 q24 12 48 0 v10 q-24 10 -48 0 z" fill="#c0262d"/><circle cx="80" cy="122" r="4" fill="#1c1c1c"/><circle cx="80" cy="140" r="4" fill="#1c1c1c"/></svg>`;
+const BASE = `<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><ellipse cx="80" cy="100" rx="70" ry="70" fill="#6b4a2a"/><ellipse cx="80" cy="100" rx="60" ry="60" fill="#7d5733"/><path d="M80 62 l34 60 h-68 z" fill="#e5b94e" stroke="#1c1c1c" stroke-width="3"/><text x="80" y="185" text-anchor="middle" font-family="monospace" font-size="11" fill="#b5c2b8">BASE · VISTA INFERIOR</text></svg>`;
+export function voltear() {
+  const caja = el('div', { class: 'widget voltear' });
+  const cara = el('div', { class: 'voltear-cara' });
+  let girada = false;
+  const pintar = () => { cara.innerHTML = girada ? BASE : FIGURA; cara.setAttribute('aria-label', girada ? 'Base de la figura con un símbolo' : 'Figura de un muñeco de nieve'); };
+  cara.setAttribute('role', 'img');
+  const btn = el('button', { type: 'button', class: 'btn', onclick: () => { girada = !girada; pintar(); cara.classList.remove('giro'); void cara.offsetWidth; cara.classList.add('giro'); } }, 'Dar la vuelta');
+  pintar();
+  caja.append(cara, el('div', { class: 'fila-botones' }, btn));
+  return caja;
+}
+
+/* ---------- Texto en espejo ---------- */
+export function espejo(cfg) {
+  const caja = el('div', { class: 'widget espejo', role: 'img', 'aria-label': 'Documento escrito en espejo' });
+  const t = el('div', { class: 'espejo-texto' });
+  for (const l of cfg.lineas) t.append(el('div', {}, l));
+  caja.append(t);
+  return caja;
+}
